@@ -44,18 +44,30 @@ app.on('activate', function () {
 ipcMain.on('create-blog-request', (event, blogTitle) => {
   blogTitle = blogTitle.replace(/[^A-Z0-9]+/ig, "_")
   blogTitle = blogTitle.toLowerCase()
-
+  
   //Create blog
   let docsPath = app.getPath('documents')
-  let command = "C: && cd " + docsPath + " && jekyll new " + blogTitle + " && cd " + blogTitle
+
+  let command;
+
+  command = "cd " + docsPath + "; jekyll new " + blogTitle + "; cd " + blogTitle
+
+  if(process.platform === "win32"){
+    command = "C: && cd " + docsPath + " && jekyll new " + blogTitle + " && cd " + blogTitle
+  }
 
   exec(command, function(err, stdout) {
     if(err){
       throw err;
     }
 
-    event.sender.send("blog-created-response", stdout)
+    event.sender.send("blog-created-response", path.join(docsPath, blogTitle))
     dialog.showMessageBox(mainWindow, { title: "Blog status", message: "Blog sucessfully created!"})
   });
 
+});
+
+
+ipcMain.on("editBlogRequest", (event, blogTitle, blogPath) => {
+  console.log("Blog edit request!")
 });

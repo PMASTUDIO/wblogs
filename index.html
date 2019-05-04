@@ -12,7 +12,8 @@
 
     <div class="center-menu-container">
       <button class="button" id="createBlog">Create Blog</button>
-      <button class="button">Edit Blog</button>
+      <button class="button" onclick="openBlog()">Open Blog</button>
+      <button class="button" id="editLastBlog" onclick="continueEditing()  ">Continue editing </button>
     </div>
 
     <div class="loading">Loading&#8230;</div>
@@ -38,17 +39,27 @@
 
     <script>
       const { ipcRenderer } = require('electron'); 
+      const { dialog, app } = require('electron').remote;
+      const fs = require('fs');
+      const Store = require('electron-store');
+      const store = new Store();
+      var readYaml = require('read-yaml');
+      const pth = require("path")
 
       //Loaders and modals for creating blog
-      let loader = document.querySelector(".loading")
+      var loader = document.querySelector(".loading")
+      var continueEditingBtn = document.getElementById("editLastBlog")
+      const blogForm = document.getElementById('blogOptionsCreate')
 
-      const blogForm = document.getElementById('blogOptionsCreate');
+      continueEditingBtn.innerHTML += store.get("last_proj")[0]
+
+      var blogTitleEl;
 
       function handle_create_blog_submit(event){
         event.preventDefault();
 
         //values
-        var blogTitleEl = document.getElementById("btitle");
+        blogTitleEl = document.getElementById("btitle");
         if(blogTitleEl.value != ""){
           modal.style.display = "none";
           createNewBlogRequest(blogTitleEl.value)
@@ -60,6 +71,10 @@
 
       blogForm.addEventListener("submit", handle_create_blog_submit, true);
 
+      function continueEditing(){
+
+      }
+
       //When create is called
       function createNewBlogRequest(blogTitle){
         loader.style.display = 'block';
@@ -67,9 +82,49 @@
       }
 
       ipcRenderer.on("blog-created-response", (events, blogPath) => {
-        loader.style.display = 'none';
-        console.log(blogPath)
+        // Edit configuration file
+        const regex = /^title: .*/gim;
+        console.log(pth.join(blogPath, "_config.yml"))
+
+        fs.readFile(pth.join(blogPath, "_config.yml"), 'utf-8', function(err, data) {
+          if(err) throw err;
+
+          var newData = data.replace(regex, 'title: ' + blogTitleEl.value);
+
+          fs.writeFile(pth.join(blogPath, "_config.yml"), newData, 'utf-8', function(err){
+            if(err) throw err;
+            loader.style.display = 'none';
+            //TODO: open blog window
+            store.set('last_proj', [blogTitleEl.value, blogPath])
+            events.sender.send("editBlogRequest", blogTitleEl.value, blogPath)
+          });
+
+        });
+        
       });
+
+      //Open blog request
+      function openBlog(){
+        dialog.showOpenDialog({title: "Select a blog (default location: Documents folder)", defaultPath: app.getPath('documents'), properties: ["openDirectory"]}, (paths) => {
+          let path = paths[0]
+          let filesList = []; 
+
+          fs.readdirSync(path).forEach(file => {
+            filesList.push(file)
+          });
+
+          if(filesList.includes("_config.yml")){
+            //TODO: Open blog window
+            readYaml(pth.join(path, "_config.yml"), function(err, data){
+              if(err) throw err;
+              store.set('last_proj', [data.title, path])
+              ipcRenderer.send("editBlogRequest", data.title, path)
+            });
+          } else {
+            dialog.showMessageBox({ type: "error", title: "Not a valid blog!", message: "Sorry, this is not a valid blog folder.", detail: "Select a folder containing your Wblogs blog, if your settings is on default your blog should be in the Documents folder"})
+          }
+        });
+      }
 
     </script>
 
