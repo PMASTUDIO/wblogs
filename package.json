@@ -1,21 +1,21 @@
 {
-  "name": "electron-quick-start",
+  "name": "wblogs",
   "version": "1.0.0",
-  "description": "A minimal Electron application",
+  "description": "Create simple blogs!",
   "main": "main.js",
   "scripts": {
     "start": "electron ."
   },
-  "repository": "https://github.com/electron/electron-quick-start",
+  "repository": "https://github.com/PMASTUDIO/wblogs",
   "keywords": [
-    "Electron",
-    "quick",
-    "start",
-    "tutorial",
-    "demo"
+    "Blogs",
+    "Quick",
+    "Simple",
+    "Github",
+    "Pages"
   ],
-  "author": "GitHub",
-  "license": "CC0-1.0",
+  "author": "Pedro Klingelfus Ganme",
+  "license": "",
   "devDependencies": {
     "electron": "^5.0.0"
   }
