@@ -1,4 +1,7 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, shell } = require('electron')
+const path = require("path")
+const { ipcMain, dialog } = require('electron')
+var exec = require("child_process").exec;
 
 let mainWindow
 
@@ -9,7 +12,8 @@ function createWindow () {
     height: 600,
     webPreferences: {
       nodeIntegration: true
-    }
+    },
+    icon: path.join(__dirname, 'assets/icons/png/64x64.png')
   })
 
   mainWindow.loadFile('index.html')
@@ -36,3 +40,22 @@ app.on('activate', function () {
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) createWindow()
 })
+
+ipcMain.on('create-blog-request', (event, blogTitle) => {
+  blogTitle = blogTitle.replace(/[^A-Z0-9]+/ig, "_")
+  blogTitle = blogTitle.toLowerCase()
+
+  //Create blog
+  let docsPath = app.getPath('documents')
+  let command = "C: && cd " + docsPath + " && jekyll new " + blogTitle + " && cd " + blogTitle
+
+  exec(command, function(err, stdout) {
+    if(err){
+      throw err;
+    }
+
+    event.sender.send("blog-created-response", stdout)
+    dialog.showMessageBox(mainWindow, { title: "Blog status", message: "Blog sucessfully created!"})
+  });
+
+});

@@ -3,17 +3,75 @@
   <head>
     <meta charset="UTF-8">
     <title>Hello World!</title>
+    <link rel="stylesheet" href="assets/css/style.css">
   </head>
   <body>
-    <h1>Hello World!</h1>
-    <!-- All of the Node.js APIs are available in this renderer process. -->
-    We are using Node.js <script>document.write(process.versions.node)</script>,
-    Chromium <script>document.write(process.versions.chrome)</script>,
-    and Electron <script>document.write(process.versions.electron)</script>.
+    <div class="hundred-wid">
+        <img class="center-in-div" src="assets/LogoFull.png" width="150">
+    </div>
+
+    <div class="center-menu-container">
+      <button class="button" id="createBlog">Create Blog</button>
+      <button class="button">Edit Blog</button>
+    </div>
+
+    <div class="loading">Loading&#8230;</div>
+
+    <div id="newBlogModal" class="modal">
+
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span class="close">&times;</span>
+
+        <form id="blogOptionsCreate">
+          <label for="btitle">Blog Title</label>
+          <input type="text" id="btitle" name="blogtitle" placeholder="My awesome blog name..">
+        
+          <input type="submit" value="Submit">
+        </form>
+
+      </div>
+    
+    </div>
+
+    <script src="assets/js/newBlogModal.js"></script>
 
     <script>
-      // You can also require other files to run in this process
-      require('./renderer.js')
+      const { ipcRenderer } = require('electron'); 
+
+      //Loaders and modals for creating blog
+      let loader = document.querySelector(".loading")
+
+      const blogForm = document.getElementById('blogOptionsCreate');
+
+      function handle_create_blog_submit(event){
+        event.preventDefault();
+
+        //values
+        var blogTitleEl = document.getElementById("btitle");
+        if(blogTitleEl.value != ""){
+          modal.style.display = "none";
+          createNewBlogRequest(blogTitleEl.value)
+        } else {
+          modal.style.display = "block";
+          blogTitleEl.placeholder = "Please fill in some value!!!";
+        }
+      }
+
+      blogForm.addEventListener("submit", handle_create_blog_submit, true);
+
+      //When create is called
+      function createNewBlogRequest(blogTitle){
+        loader.style.display = 'block';
+        ipcRenderer.send('create-blog-request', blogTitle)
+      }
+
+      ipcRenderer.on("blog-created-response", (events, blogPath) => {
+        loader.style.display = 'none';
+        console.log(blogPath)
+      });
+
     </script>
+
   </body>
 </html>
