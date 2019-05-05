@@ -13,7 +13,7 @@
     <div class="center-menu-container">
       <button class="button" id="createBlog">Create Blog</button>
       <button class="button" onclick="openBlog()">Open Blog</button>
-      <button class="button" id="editLastBlog" onclick="continueEditing()  ">Continue editing </button>
+      <button class="button" id="editLastBlog" onclick="continueEditing()">Continue editing </button>
     </div>
 
     <div class="loading">Loading&#8230;</div>
@@ -72,7 +72,7 @@
       blogForm.addEventListener("submit", handle_create_blog_submit, true);
 
       function continueEditing(){
-
+        ipcRenderer.send("editBlogRequest", store.get("last_proj")[0], store.get("last_proj")[1])
       }
 
       //When create is called
@@ -95,6 +95,7 @@
             if(err) throw err;
             loader.style.display = 'none';
             //TODO: open blog window
+            
             store.set('last_proj', [blogTitleEl.value, blogPath])
             events.sender.send("editBlogRequest", blogTitleEl.value, blogPath)
           });

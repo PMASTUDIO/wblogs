@@ -1,9 +1,10 @@
-const { app, BrowserWindow, shell } = require('electron')
+const { app, BrowserWindow, shell, Menu } = require('electron')
 const path = require("path")
 const { ipcMain, dialog } = require('electron')
 var exec = require("child_process").exec;
 
 let mainWindow
+let blogEdit
 
 function createWindow () {
 
@@ -18,12 +19,16 @@ function createWindow () {
 
   mainWindow.loadFile('index.html')
 
+  Menu.setApplicationMenu(null)
+
   // mainWindow.webContents.openDevTools()
 
   mainWindow.on('closed', function () {
 
     mainWindow = null
   })
+
+  blogEdit = require("./blogEdit")
 }
 
 app.on('ready', createWindow)
@@ -67,7 +72,53 @@ ipcMain.on('create-blog-request', (event, blogTitle) => {
 
 });
 
-
 ipcMain.on("editBlogRequest", (event, blogTitle, blogPath) => {
-  console.log("Blog edit request!")
+
+  //Menu part
+  const menuBlogEditTemplate = [
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'Stop editing',
+          click() {
+            blogEdit.hide();
+            mainWindow.show();
+          }
+        },
+        {
+          label: 'Auto Saved...',
+          enabled: false,
+        },
+        {
+          type: 'separator'
+        },
+        {
+          label: 'Quit app',
+          role: 'quit'
+        }],
+      },
+      {
+        label: 'View',
+        submenu: [
+          {
+            label: 'Preview blog',
+          },
+          {
+            label: 'Preview on browser',
+          }]
+      },
+  ]
+  
+  const menu = Menu.buildFromTemplate(menuBlogEditTemplate)
+  blogEdit.setMenu(menu)
+
+  blogEdit.webContents.send('init_window', blogTitle, blogPath)
+  blogEdit.show();
+  mainWindow.hide();
 });
+
+ipcMain.on('back', (event) => {
+  blogEdit.hide();
+  mainWindow.show();
+})

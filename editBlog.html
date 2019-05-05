@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit </title>
+  <link rel="stylesheet" href="assets/css/editBlog.css">
+</head>
+<body>
+
+  <div class="back" onclick="ipcRenderer.send('back')">
+    <span style="font-size: 50px;"><b>&#8592</b></span>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require("electron")
+
+
+
+    ipcRenderer.on("init_window", (event, blogName, blogPath) => {
+      document.title = "Editing " + blogName + " - " + blogPath
+      console.log(blogName)
+      console.log(blogPath)
+    });
+  </script>
+</body>
+</html>
